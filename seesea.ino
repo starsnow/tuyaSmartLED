@@ -1,49 +1,7 @@
 #include <TuyaWifi.h>
 #include <SoftwareSerial.h>
 #include <FastLED.h>
-
-#define NUM_LEDS_PER_MATRIX 64
-#define MATRIX_NUM 6
-#define INIT_BRIGHTNESS 5
-#define CHIPSET WS2812B
-#define COLOR_ORDER GRB
-#define MATRIX_WIDTH 8
-#define MATRIX_HEIGHT 8
-
-enum DATA_PIN
-{
-    UP_PIN = 2,
-    DOWN_PIN = 4,
-    LEFT_PIN = 5,
-    RIGHT_PIN = 6,
-    FRONT_PIN = 7,
-    BACK_PIN = 8
-};
-
-enum CUBE_SIDE
-{
-    UP_SIDE = 0,
-    DOWN_SIDE,
-    LEFT_SIDE,
-    RIGHT_SIDE,
-    FRONT_SIDE,
-    BACK_SIDE
-};
-
-// 点阵放置的方向
-enum MATRIX_DIR
-{
-    CW0 = 0,
-    CW90,
-    CW180,
-    CW270
-};
-
-CRGB leds[3][NUM_LEDS_PER_MATRIX];
-
-void (*renderFunction)() = 0;
-void (*lastRenderFunction)() = 0;
-
+#include "cube2812.h"
 
 boolean oldState = HIGH;
 int mode = 0; // Currently-active animation mode, 0-9
@@ -53,7 +11,7 @@ TuyaWifi my_device;
 unsigned char led_state = 0;
 /* Connect network button pin */
 
-const uint8_t BUTTON_PIN = 3;
+const uint8_t WIFI_RECONNECT_BUTTON_PIN = 3;
 
 //开关(可下发可上报)
 //备注:
@@ -223,11 +181,9 @@ unsigned char dp_array[][2] = {
 unsigned char pid[] = {"vhj6p7rzvoemihhx"}; //*********处替换成涂鸦IoT平台自己创建的产品的PID
 unsigned char mcu_ver[] = {"1.0.0"};
 
-unsigned long last_time = 0;
-
 void setup()
 {
-    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    pinMode(WIFI_RECONNECT_BUTTON_PIN, INPUT_PULLUP);
 
     Serial.begin(9600);
     //Initialize led port, turn off led.
@@ -245,25 +201,16 @@ void setup()
 
     last_time = millis();
 
-
-    FastLED.setBrightness(INIT_BRIGHTNESS);
-
-    // 内存不足，所以所有的侧面都用同样的显示
-    FastLED.addLeds<CHIPSET, UP_PIN, COLOR_ORDER>(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
-    FastLED.addLeds<CHIPSET, DOWN_PIN, COLOR_ORDER>(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
-    FastLED.addLeds<CHIPSET, LEFT_PIN, COLOR_ORDER>(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
-    FastLED.addLeds<CHIPSET, RIGHT_PIN, COLOR_ORDER>(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
-    FastLED.addLeds<CHIPSET, FRONT_PIN, COLOR_ORDER>(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
-    FastLED.addLeds<CHIPSET, BACK_PIN, COLOR_ORDER>(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+    initCube2812();
 }
 
 void loop()
 {
     //Enter the connection network mode when Pin7 is pressed.
-    if (digitalRead(BUTTON_PIN) == LOW)
+    if (digitalRead(WIFI_RECONNECT_BUTTON_PIN) == LOW)
     {
         delay(80);
-        if (digitalRead(BUTTON_PIN) == LOW)
+        if (digitalRead(WIFI_RECONNECT_BUTTON_PIN) == LOW)
         {
             my_device.mcu_set_wifi_mode(SMART_CONFIG);
         }
@@ -289,7 +236,9 @@ void loop()
         }
     }
 
-    if (millis() - last_time > 10)
+    static unsigned long last_time = 0;
+    static unsigned int renderIntervalMs = 0;
+    if (millis() - last_time > renderIntervalMs)
     {
         last_time = millis();
         renderLED();
@@ -547,10 +496,10 @@ void renderHackMatrix()
     hackMatrix(leds[0], CW0);
 }
 
-void renderLED()
+renderLED()
 {
     if (renderFunction == 0)
-        return;
+        return -1;
 
     renderFunction();
     FastLED.show();
