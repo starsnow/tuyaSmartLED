@@ -28,14 +28,13 @@ enum DATA_PIN
 };
 
 // 立方体每个面
-// 如果因内存不足的话，按优先级使用 上 左 前 三个面，使三个相邻的面不同样，在观看的时候也就达到效果了
 enum CUBE_SIDE
 {
     UP_SIDE = 0,
-    LEFT_SIDE,
-    FRONT_SIDE,
     DOWN_SIDE,
+    LEFT_SIDE,
     RIGHT_SIDE,
+    FRONT_SIDE,
     BACK_SIDE
 };
 
@@ -75,15 +74,9 @@ public:
 };
 
 // FastLED 的 LED 数据
-// 内存不够用，只用三个面
-CRGB leds[MATRIX_NUM][NUM_LEDS_PER_MATRIX];
-
-// 各个 FastLED 控制器
-CLEDController& FastLEDControllers[MATRIX_NUM];
+CRGB leds[3][NUM_LEDS_PER_MATRIX];
 
 void initCube2812();
 void updateCube2812();
-uint16_t XY(uint8_t x, uint8_t y, uint8_t dir = CW0) inline;
-void randomDot(CRGB pLeds[], CRGB &color);
 
 #endif

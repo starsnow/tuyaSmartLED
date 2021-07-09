@@ -124,12 +124,17 @@ uint16_t XY(uint8_t x, uint8_t y, uint8_t dir = CW0) inline
 // 彩虹模式，所有面都一样
 void initRainbowMode()
 {
-
+    for (int i = 0; i < MATRIX_NUM; ++i)
+    {
+        FastLEDControllers[i]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+    }
 }
 
 unsigned int renderRainbow()
 {
-
+    static uint8_t hue = -1;
+    fill_rainbow(leds[UP_SIDE], NUM_LEDS_PER_MATRIX, hue++, 10);
+    return 10;
 }
 
 // ------------------------------------------------------------
@@ -140,22 +145,96 @@ unsigned int renderRainbow()
 // 所有侧面一样，上下面一样
 void initHackMatrixMode()
 {
-
+    FastLEDControllers[UP_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[DOWN_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[LEFT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[RIGHT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[FRONT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[BACK_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
 }
 
+// 黑客帝国效果，侧面
+void renderHackMatrixSide(CRGB pLeds[], uint8_t dir)
+{
+    static Point head[10];
+    const CRGB HEAD_COLOR = CRGB::White;
+    const CRGB BODY_COLOR = CRGB::Green;
+    const uint8_t DISAPPEAR_RATE = 100;
+    CRGB *pLed;    
 
+    uint8_t i;
 
+    for (uint8_t y = 0; y < 8; ++y)
+    {
+        for (uint8_t x = 0; x < 8; ++x)
+        {
+            pLed = &pLeds[XY(x, y, dir)];
+            if (*pLed == HEAD_COLOR)
+            {
+                *pLed = BODY_COLOR;
+                continue;
+            }
+
+            // 淡化
+            pLed->nscale8(DISAPPEAR_RATE);
+
+            if (y >= 1)
+            {
+                // pLeds[XY(x, y, dir)] = pLeds[XY(x, y - 1, dir)];
+                continue;
+            }
+
+            // y == 0 的时候，根据几率来生成一个头部点
+            if (random8(100) > 10)
+                continue;
+
+            for (i = 0; i < 10; ++i)
+            {
+                // 找到空余头部点位置的时候才生成新的头部点
+                if (head[i].x != -1)
+                    continue;
+
+                head[i].x = random8(MATRIX_WIDTH);
+                head[i].y = y;
+                break;
+            }
+        }
+    }
+
+    // 向下移动头部的坐标
+    for (i = 0; i < 10; ++i)
+    {
+        if (head[i].x == -1)
+            continue;
+
+        pLeds[XY(head[i].x, head[i].y, dir)] = HEAD_COLOR;
+
+        head[i].y++;
+        if (head[i].y >= MATRIX_HEIGHT)
+        {
+            head[i].x = -1;
+            continue;
+        }
+    }
 }
 
 // 黑客帝国效果，顶和底面
 void renderHackMatrixTop(CRGB pLeds[])
 {
+    const uint8_t DISAPPEAR_RATE = 100;
+    nscale8(leds[UP_SIDE], NUM_LEDS_PER_MATRIX, DISAPPEAR_RATE);
+
+    if (random8(100) > 10)
+        return;
+
+    randomDot(pLeds, CRGB::Green);
 }
 
 // 渲染黑客帝国
 unsigned int renderHackMatrix()
 {
-
+    renderHackMatrixTop(leds[UP_SIDE]);
+    renderHackMatrixSide(leds[LEFT_SIDE], CW0);
     return 100;
 }
 
@@ -167,21 +246,97 @@ unsigned int renderHackMatrix()
 // 每相邻的三个面不一样就可以了，因为一次只能同时看到三面
 void initStarSkyMode()
 {
-
+    FastLEDControllers[UP_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[DOWN_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[LEFT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[RIGHT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[FRONT_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[BACK_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
 }
 
+const uint8_t MAX_STAR_NUM = 30;
+static class star 
+{
+    // Point pos;
+    CRGB *pLed;
+    uint8_t _life;
+    uint8_t _curLife;
+    uint8_t _brightnessRate;
 
+public:
+    start()
+    {
+        _life = 0;
+    }
 
+    star(CRGB *pLeds, uint8_t x, uint8_t y, uint8_t life, uint8_t brightnessRate)
+    {
+        // pos.x = x;
+        // pos.y = y;
+        _life = life;
+        _curLife = 0;
+        _brightnessRate = brightnessRate;
+        pLed = *pLeds[XY(x, y)];
+        *pLed = CRGB::Black;
+    }
+
+    void twinkle()
+    {
+        // 生命结束
+        if (_curLife >= _life)
+        {
+            _life = 0;
+            *pLed = CRGB::Black;
+            return;
+        }
+
+        // 前半段生命是渐亮，后半段生命渐暗
+        if (_curLife < (_life >> 1))
+        {
+            *pLed += _brightnessRate;
+        }
+        else
+        {
+            *pLed -= _brightnessRate;
+        }
+
+        _curLife++;
+    }
+
+    bool isAlive()
+    {
+        return _life > 0;
+    }
+
+} stars[MAX_STAR_NUM];
 
 // 渲染某一个面的星星
 void renderStar(CRGB *pLeds)
 {
+    if (random8(100) > 70)
+        return;
 
+    for (uint8_t i = 0; i < MAX_STAR_NUM; ++i)
+    {
+        if (! stars[i].isAlive())
+        {
+            continue;
+        }
+
+        stars[i].twinkle();
+    }
 }
 
 // 星空效果
 unsigned int renderStarSky()
 {
+    const uint8_t DISAPPEAR_RATE = 100;
+
+    randPutAStar(leds[UP_SIDE]);
+    randPutAStar(leds[LEFT_SIDE]);
+    randPutAStar(leds[FRONT_SIDE]);
+    
+    return random8(10, 50);
 }
 
 // ------------------------------------------------------------
@@ -192,27 +347,90 @@ unsigned int renderStarSky()
 // 和黑客帝国效果一样
 void initRainMode()
 {
-
+    FastLEDControllers[UP_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[DOWN_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[LEFT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[RIGHT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[FRONT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+    FastLEDControllers[BACK_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
 }
 
 // 雨滴效果上下面的渲染
 // 和黑客帝国效果一样
 void renderRainTop()
 {
+    nscale8(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+
+    if (random8(100) > 10)
+        return;
+
+    randomDot(pLeds, CRGB::White);
 }
 
 // 雨滴效果侧面的渲染
 // 和黑客帝国效果差不多
 void renderRainSide()
 {
+    static Point head[10];
+    const CRGB RAIN_COLOR = CRGB::Green;
+    const uint8_t DISAPPEAR_RATE = 100;
+    CRGB *pLed;
 
+    uint8_t i;
+
+    for (uint8_t y = 0; y < 8; ++y)
+    {
+        for (uint8_t x = 0; x < 8; ++x)
+        {
+            // 淡化
+            pLed = &pLeds[XY(x, y, dir)];
+            pLed->nscale8(DISAPPEAR_RATE);
+
+            if (y >= 1)
+            {
+                continue;
+            }
+
+            // y == 0 的时候，根据几率来生成一个头部点
+            if (random8(100) > 10)
+                continue;
+
+            for (i = 0; i < 10; ++i)
+            {
+                // 找到空余头部点位置的时候才生成新的头部点
+                if (head[i].x != -1)
+                    continue;
+
+                head[i].x = random8(MATRIX_WIDTH);
+                head[i].y = y;
+                break;
+            }
+        }
+    }
+
+    // 向下移动头部的坐标
+    for (i = 0; i < 10; ++i)
+    {
+        if (head[i].x == -1)
+            continue;
+
+        pLeds[XY(head[i].x, head[i].y, dir)] = RAIN_COLOR;
+
+        head[i].y++;
+        if (head[i].y >= MATRIX_HEIGHT)
+        {
+            head[i].x = -1;
+            continue;
+        }
+    }
 }
 
 // 雨滴效果渲染
 // 和黑客帝国效果差不多
 unsigned int renderRain()
 {
-
+    renderHackMatrixTop(leds[UP_SIDE]);
+    renderHackMatrixSide(leds[LEFT_SIDE], CW0);
     return 100;
 }
 
