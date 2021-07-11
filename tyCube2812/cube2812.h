@@ -5,11 +5,15 @@
 #ifndef _CUBE2812_H_
 #define _CUBE2812_H_
 
+#include <arduino.h>
+#include <fastLED.h>
+
 // 点阵屏的相应参数
-#define NUM_LEDS_PER_MATRIX 64
-#define MATRIX_NUM          6
-#define MATRIX_WIDTH        8
-#define MATRIX_HEIGHT       8
+#define NUM_LEDS_PER_MATRIX 64  // 点阵 LEF 数量
+#define MATRIX_NUM          6   // 点阵屏数量
+#define MATRIX_BUFFER_NUM   3   // 点阵屏的 LED 缓冲区数量（因内存不足，不同的点阵屏用同一个缓冲区显示同样的内容）
+#define MATRIX_WIDTH        8   // 点阵屏的宽（LED 数）
+#define MATRIX_HEIGHT       8   // 点阵屏的高（LED 数）
 
 // FastLED 相关参数
 #define INIT_BRIGHTNESS     5
@@ -52,10 +56,10 @@ enum MATRIX_DIR
 enum RENDER_MODE 
 {
     RAINBOW,            // 彩虹
+    COLOURFUL_DREAM,    // 五彩梦幻
     HACKER_MATRIX,      // 黑客帝国
     STAR_SKY,           // 星空
     RAIN,               // 雨
-    COLOURFUL_DREAM,    // 五彩梦幻
     BUBBLE,             // 气泡
     SNOW,               // 雪
     ENERGY_CUBE,        // 能量魔方
@@ -69,21 +73,15 @@ public:
     {
         x = _x;
         y = _y;
-    }
+    };
 
     int8_t x, y;
 };
 
-// FastLED 的 LED 数据
-// 内存不够用，只用三个面
-CRGB leds[MATRIX_NUM][NUM_LEDS_PER_MATRIX];
-
-// 各个 FastLED 控制器
-CLEDController& FastLEDControllers[MATRIX_NUM];
-
 void initCube2812();
 void updateCube2812();
-uint16_t XY(uint8_t x, uint8_t y, uint8_t dir = CW0) inline;
-void randomDot(CRGB pLeds[], CRGB &color);
+inline uint16_t XY(uint8_t x, uint8_t y, uint8_t dir = CW0);
+void randomDot(CRGB pLeds[], const CRGB color);
+void setRenderMode(enum RENDER_MODE mode);
 
 #endif

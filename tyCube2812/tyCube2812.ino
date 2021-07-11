@@ -199,13 +199,12 @@ void setup()
     //register upload all DP callback function
     my_device.dp_update_all_func_register(dp_update_all);
 
-    last_time = millis();
-
     initCube2812();
 }
 
 void loop()
 {
+    static unsigned long last_time = 0;
     //Enter the connection network mode when Pin7 is pressed.
     if (digitalRead(WIFI_RECONNECT_BUTTON_PIN) == LOW)
     {
@@ -236,7 +235,7 @@ void loop()
         }
     }
 
-    updateCub2812();
+    updateCube2812();
 }
 
 /**
@@ -255,14 +254,14 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
         if (dp_bool_value)
         {
             //Turn on
-            renderFunction = lastRenderFunction;
+//            renderFunction = lastRenderFunction;
             FastLED.clear();
         }
         else
         {
             //Turn off
-            lastRenderFunction = renderFunction;
-            renderFunction = 0;
+//            lastRenderFunction = renderFunction;
+//            renderFunction = 0;
             FastLED.showColor(CRGB::Black);
         }
 
@@ -299,7 +298,7 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
         break;
 
     case DPID_SCENE_DATA:
-    blinkLED(1);
+//    blinkLED(1);
        my_device.mcu_dp_update(DPID_DREAMLIGHT_SCENE_MODE, value, length);
 
         scene_mode = value[1];
@@ -307,10 +306,10 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
         switch (scene_mode)
         {
         case 0:
-            renderFunction = renderRainbow;
+//            renderFunction = renderRainbow;
             break;
         case 1:
-            renderFunction = renderHackMatrix;
+//            renderFunction = renderHackMatrix;
             break;
         case 2:
             break;
@@ -330,34 +329,30 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
         break;
 
     case DPID_DREAMLIGHT_SCENE_MODE: //炫彩情景
-        blinkLED(2);
+//        blinkLED(2);
         //delay(1000);
         my_device.mcu_dp_update(DPID_DREAMLIGHT_SCENE_MODE, value, length);
 
         scene_mode = value[1];
-blinkLED(scene_mode);
+//blinkLED(scene_mode);
         switch (scene_mode)
         {
         case 0:
-            renderFunction = renderRainbow;
+//            renderFunction = renderRainbow;
             break;
         case 1:
-            renderFunction = renderHackMatrix;
+//            renderFunction = renderHackMatrix;
             break;
         case 2:
-            renderFunction = renderRainbow;
+//            renderFunction = renderRainbow;
             break;
         case 3:
-            renderFunction = renderRainbow;
             break;
         case 4:
-            renderFunction = renderRainbow;
             break;
         case 5:
-            renderFunction = renderRainbow;
             break;
         case 6:
-            renderFunction = renderRainbow;
             break;
         case 7:
             break;

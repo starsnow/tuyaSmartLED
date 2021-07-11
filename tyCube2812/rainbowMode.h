@@ -6,11 +6,19 @@
 #define _RAINBOW_MODE_H_
 
 #include "cube2812.h"
+#include "modeBaseClass.h"
 
-class RainbowMode : public renderMode
+// FastLED 的 LED 数据
+// 内存不够用，只用三个面
+extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
+
+// 各个 FastLED 控制器
+extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
+
+class RainbowMode : public RenderMode
 {
 private:
-    unsigned int renderInterval;
+    unsigned long renderInterval;
 
 public:
     RainbowMode()
@@ -20,17 +28,17 @@ public:
 
     String getName() 
     {
-        return "rainbow mode";
+        return F("rainbow mode");
     }
 
-    unsignd long renderInterval()
+    unsigned long getRenderInterval()
     {
         return renderInterval;
     }
 
     void init()
     {
-        for (int i = 0; i < MATRIX_NUM; ++i)
+        for (uint8_t i = 0; i < MATRIX_NUM; ++i)
         {
             FastLEDControllers[i]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
         }
