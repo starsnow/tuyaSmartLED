@@ -57,8 +57,8 @@ enum RENDER_MODE
 {
     RAINBOW,            // 彩虹
     COLOURFUL_DREAM,    // 五彩梦幻
-    HACKER_MATRIX,      // 黑客帝国
     STAR_SKY,           // 星空
+    HACKER_MATRIX,      // 黑客帝国
     RAIN,               // 雨
     BUBBLE,             // 气泡
     SNOW,               // 雪

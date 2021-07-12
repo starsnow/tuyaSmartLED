@@ -5,6 +5,7 @@
 #include "cube2812.h"
 #include "rainbowMode.h"
 #include "colourfulDreamMode.h"
+#include "starSkyMode.h"
 
 // FastLED 的 LED 数据
 // 内存不够用，只用三个面
@@ -15,8 +16,9 @@ CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
 
 RainbowMode rainbowMode;
 ColourfulDreamMode colourfulDreamMode;
+StarSkyMode starSkyMode;
 
-RenderMode *renderModes[] = { &rainbowMode, &colourfulDreamMode };
+RenderMode *renderModes[] = { &rainbowMode, &colourfulDreamMode, &starSkyMode };
 RenderMode *renderMode = 0;
 
 // 初始化
@@ -33,7 +35,8 @@ void initCube2812()
     FastLEDControllers[BACK_SIDE]  = &FastLED.addLeds<CHIPSET, BACK_PIN,  COLOR_ORDER>(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
 
     // setRenderMode(RAINBOW);
-    setRenderMode(COLOURFUL_DREAM);
+    // setRenderMode(COLOURFUL_DREAM);
+    setRenderMode(STAR_SKY);
 }
 
 // 渲染刷新函数
