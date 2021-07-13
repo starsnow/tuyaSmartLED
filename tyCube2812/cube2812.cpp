@@ -8,6 +8,8 @@
 #include "starSkyMode.h"
 #include "rainMode.h"
 #include "hackerMatrixMode.h"
+#include "bubbleMode.h"
+
 
 // FastLED 的 LED 数据
 // 内存不够用，只用三个面
@@ -42,7 +44,9 @@ void initCube2812()
 
     // setRenderMode(RAINBOW);
     // setRenderMode(COLOURFUL_DREAM);
-    setRenderMode(STAR_SKY);
+    // setRenderMode(STAR_SKY);
+    // setRenderMode(HACKER_MATRIX);
+    setRenderMode(BUBBLE);
 }
 
 // 渲染刷新函数
@@ -95,6 +99,9 @@ void setRenderMode(enum RENDER_MODE mode)
             break;
 
         case BUBBLE:             // 气泡
+            newMode = new BubbleMode();
+            break;
+
         case SNOW:               // 雪
         case ENERGY_CUBE:        // 能量魔方
 

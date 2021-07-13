@@ -18,21 +18,26 @@ extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
 class HackerMatrixMode : public RenderMode
 {
 private:
+    const uint8_t DISAPPEAR_RATE = 200;
+    static const uint8_t HEAD_NUM = 20;
+    const CRGB HEAD_COLOR = CRGB::DarkGray;
+    const CRGB BODY_COLOR = CRGB::Green;
+    
     unsigned int renderInterval;
     uint8_t newDotChance;
-    Point head[10];
+    Point head[HEAD_NUM];
     CRGB *pLedsTop, *pLedsSide;
 
 public:
     HackerMatrixMode()
     {
         renderInterval = 100;
-        newDotChance = 80;
+        newDotChance = 90;
     }
 
     String getName() 
     {
-        return F("hack matrix mode");
+        return F("hacker matrix mode");
     }
 
     unsigned int getRenderInterval()
@@ -56,9 +61,6 @@ public:
     // 黑客帝国效果，侧面
     void renderHackerMatrixSide(CRGB pLeds[], uint8_t dir)
     {
-        const CRGB HEAD_COLOR = CRGB::White;
-        const CRGB BODY_COLOR = CRGB::Green;
-        const uint8_t DISAPPEAR_RATE = 100;
         CRGB *pLed;    
 
         uint8_t i;
@@ -86,7 +88,7 @@ public:
                 if (random8(100) > (100 - newDotChance))
                     continue;
 
-                for (i = 0; i < 10; ++i)
+                for (i = 0; i < HEAD_NUM; ++i)
                 {
                     // 找到空余头部点位置的时候才生成新的头部点
                     if (head[i].x != -1)
@@ -100,7 +102,7 @@ public:
         }
 
         // 向下移动头部的坐标
-        for (i = 0; i < 10; ++i)
+        for (i = 0; i < HEAD_NUM; ++i)
         {
             if (head[i].x == -1)
                 continue;
@@ -119,17 +121,20 @@ public:
     // 黑客帝国效果，顶和底面
     void renderHackerMatrixTop(CRGB pLeds[])
     {
-        const uint8_t DISAPPEAR_RATE = 100;
-
-        for (uint8_t i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT; ++i)
+        for (uint8_t i = 0; i < NUM_LEDS_PER_MATRIX; ++i)
         {
+            if (pLeds[i] == HEAD_COLOR)
+            {
+                pLeds[i] = BODY_COLOR;
+                continue;
+            }
             pLeds[i].nscale8(DISAPPEAR_RATE);
         }
 
         if (random8(100) > (100 - newDotChance))
             return;
 
-        randomDot(pLeds, CRGB::White);
+        randomDot(pLeds, HEAD_COLOR);
     }
 
     void render() 

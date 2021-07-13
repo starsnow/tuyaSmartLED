@@ -22,6 +22,8 @@ private:
     uint8_t newDotChance;
     Point head[10];
     CRGB *pLedsTop, *pLedsSide;
+    const uint8_t DISAPPEAR_RATE = 100;
+    const uint8_t RAIN_DROP_NUM = 10;
 
 public:
     RainMode()
@@ -57,9 +59,7 @@ public:
     // 和黑客帝国效果一样
     void renderRainTop()
     {
-        const uint8_t DISAPPEAR_RATE = 100;
-
-        for (uint8_t i = 0; i < MATRIX_WIDTH * MATRIX_HEIGHT; ++i)
+        for (uint8_t i = 0; i < NUM_LEDS_PER_MATRIX; ++i)
         {
             pLedsTop[i].nscale8(DISAPPEAR_RATE);
         }
@@ -74,14 +74,13 @@ public:
     // 和黑客帝国效果差不多
     void renderRainSide(CRGB pLeds[], uint8_t dir)
     {
-        const uint8_t DISAPPEAR_RATE = 100;
         const CRGB RAIN_COLOR = CRGB::White;
         CRGB *pLed;
         uint8_t i;
 
-        for (uint8_t y = 0; y < 8; ++y)
+        for (uint8_t y = 0; y < MATRIX_HEIGHT; ++y)
         {
-            for (uint8_t x = 0; x < 8; ++x)
+            for (uint8_t x = 0; x < MATRIX_WIDTH; ++x)
             {
                 // 淡化
                 pLed = &pLeds[XY(x, y, dir)];
@@ -96,7 +95,7 @@ public:
                 if (random8(100) > (100 - newDotChance))
                     continue;
 
-                for (i = 0; i < 10; ++i)
+                for (i = 0; i < RAIN_DROP_NUM; ++i)
                 {
                     // 找到空余头部点位置的时候才生成新的头部点
                     if (head[i].x != -1)
@@ -110,7 +109,7 @@ public:
         }
 
         // 向下移动头部的坐标
-        for (i = 0; i < 10; ++i)
+        for (i = 0; i < RAIN_DROP_NUM; ++i)
         {
             if (head[i].x == -1)
                 continue;

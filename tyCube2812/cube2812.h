@@ -11,7 +11,7 @@
 // 点阵屏的相应参数
 #define NUM_LEDS_PER_MATRIX 64  // 点阵 LEF 数量
 #define MATRIX_NUM          6   // 点阵屏数量
-#define MATRIX_BUFFER_NUM   3   // 点阵屏的 LED 缓冲区数量（因内存不足，不同的点阵屏用同一个缓冲区显示同样的内容）
+#define MATRIX_BUFFER_NUM   4   // 点阵屏的 LED 缓冲区数量（因内存不足，不同的点阵屏用同一个缓冲区显示同样的内容）
 #define MATRIX_WIDTH        8   // 点阵屏的宽（LED 数）
 #define MATRIX_HEIGHT       8   // 点阵屏的高（LED 数）
 

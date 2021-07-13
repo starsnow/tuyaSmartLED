@@ -18,6 +18,7 @@ class ColourfulDreamMode : public RenderMode
 {
 private:
     unsigned int renderInterval;
+    const uint8_t DISAPPEAR_RATE = 250;
 
 public:
     ColourfulDreamMode()
@@ -55,8 +56,6 @@ public:
 
     void render() 
     {
-        const uint8_t DISAPPEAR_RATE = 250;
-
         nscale8(leds[UP_SIDE], NUM_LEDS_PER_MATRIX, DISAPPEAR_RATE);
         nscale8(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX, DISAPPEAR_RATE);
         nscale8(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX, DISAPPEAR_RATE);
