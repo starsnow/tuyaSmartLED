@@ -30,7 +30,7 @@ public:
         return F("colourful dream mode");
     }
 
-    unsigned long getRenderInterval()
+    unsigned int getRenderInterval()
     {
         return renderInterval;
     }

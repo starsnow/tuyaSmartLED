@@ -8,10 +8,10 @@
 class RenderMode
 {
 public:
-    virtual String        getName() {};           // 模式名字
-    virtual void          render() {};            // 渲染函数
-    virtual unsigned long getRenderInterval() {}; // 渲染时间间隔（单位毫秒）
-    virtual void          init() {};              // 初始化
+    virtual String       getName() {};           // 模式名字
+    virtual void         render() {};            // 渲染函数
+    virtual unsigned int getRenderInterval() {}; // 渲染时间间隔（单位毫秒）
+    virtual void         init() {};              // 初始化
 };
 
 #endif

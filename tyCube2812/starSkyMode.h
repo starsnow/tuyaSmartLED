@@ -92,7 +92,7 @@ public:
         return F("star sky mode");
     }
 
-    unsigned long getRenderInterval()
+    unsigned int getRenderInterval()
     {
         return renderInterval;
     }

@@ -6,6 +6,8 @@
 #include "rainbowMode.h"
 #include "colourfulDreamMode.h"
 #include "starSkyMode.h"
+#include "rainMode.h"
+#include "hackerMatrixMode.h"
 
 // FastLED 的 LED 数据
 // 内存不够用，只用三个面
@@ -14,11 +16,15 @@ CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 // 各个 FastLED 控制器
 CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
 
+/*
+// 使用先创建一堆对象，再用指针数组的方式比较简单也不容易内存泄露，但是费内存
 RainbowMode rainbowMode;
 ColourfulDreamMode colourfulDreamMode;
 StarSkyMode starSkyMode;
 
 RenderMode *renderModes[] = { &rainbowMode, &colourfulDreamMode, &starSkyMode };
+*/
+
 RenderMode *renderMode = 0;
 
 // 初始化
@@ -57,9 +63,50 @@ void updateCube2812()
     }
 }
 
+// 设置渲染模式
 void setRenderMode(enum RENDER_MODE mode)
 {
-    renderMode = renderModes[mode];
+    // 使用先创建一堆对象，再用指针数组的方式比较简单也不容易内存泄露，但是费内存
+    // renderMode = renderModes[mode];
+    // renderMode->init();
+
+    RenderMode *newMode = 0;
+
+    switch (mode)
+    {
+        case RAINBOW:            // 彩虹
+            newMode = new RainbowMode();
+            break;
+
+        case COLOURFUL_DREAM:   // 五彩梦幻
+            newMode = new ColourfulDreamMode();
+            break;
+        
+        case STAR_SKY:           // 星空
+            newMode = new StarSkyMode();
+            break;
+
+        case HACKER_MATRIX:      // 黑客帝国
+            newMode = new HackerMatrixMode();
+            break;
+
+        case RAIN:               // 雨
+            newMode = new RainMode();
+            break;
+
+        case BUBBLE:             // 气泡
+        case SNOW:               // 雪
+        case ENERGY_CUBE:        // 能量魔方
+
+        default: 
+            return;
+    }
+
+    if (newMode == 0)
+        return;
+
+    delete renderMode;
+    renderMode = newMode;
     renderMode->init();
 }
 

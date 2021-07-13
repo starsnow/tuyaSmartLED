@@ -18,7 +18,7 @@ extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
 class RainbowMode : public RenderMode
 {
 private:
-    unsigned long renderInterval;
+    unsigned int renderInterval;
 
 public:
     RainbowMode()
@@ -31,7 +31,7 @@ public:
         return F("rainbow mode");
     }
 
-    unsigned long getRenderInterval()
+    unsigned int getRenderInterval()
     {
         return renderInterval;
     }
