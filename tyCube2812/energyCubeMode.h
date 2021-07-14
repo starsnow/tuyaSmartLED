@@ -15,81 +15,24 @@ extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 // 各个 FastLED 控制器
 extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
 
-const uint8_t MAX_STAR_NUM = 10;
-
-class Star 
-{
-    // Point pos;
-    CRGB *pLed;
-    uint8_t life;
-    uint8_t curLife;
-    uint8_t brightnessRate;
-
-public:
-    start()
-    {
-        life = 0;
-    }
-
-    star(CRGB *pLeds, uint8_t _x, uint8_t _y, uint8_t _life, uint8_t _brightnessRate)
-    {
-        life = _life;
-        curLife = 0;
-        brightnessRate = _brightnessRate;
-        pLed = &pLeds[XY(_x, _y)];
-        *pLed = CRGB::Black;
-    }
-
-    void init(CRGB *pLeds, uint8_t _x, uint8_t _y, uint8_t _life, uint8_t _brightnessRate)
-    {
-        star(pLeds, _x, _y, _life, _brightnessRate);
-    }
-
-    void twinkle()
-    {
-        // 生命结束
-        if (curLife >= life)
-        {
-            life = 0;
-            *pLed = CRGB::Black;
-            return;
-        }
-
-        // 前半段生命是渐亮，后半段生命渐暗
-        if (curLife < (life >> 1))
-        {
-            pLed->addToRGB(brightnessRate);
-        }
-        else
-        {
-            pLed->subtractFromRGB(brightnessRate);
-        }
-
-        curLife++;
-    }
-
-    bool isAlive()
-    {
-        return life > 0;
-    }
-};
-
-class StarSkyMode : public RenderMode
+class EnergyCubeMode : public RenderMode
 {
 private:
+    static const uint8_t SCALE_RATE = 200;  // 变暗的比率
+    static const uint8_t CORE_CHANCE = 90;  // 核心新出能量点的几率
+    static const uint8_t EDGE_CHANCE = 50;  // 边缘新出能量点的几率
     unsigned int renderInterval;
-    Star stars[MAX_STAR_NUM];
-    CRGB *pLeds[MATRIX_BUFFER_NUM];
+    CRGB *pLeds;
 
 public:
-    StarSkyMode()
+    EnergyCubeMode()
     {
         renderInterval = 5;
     }
 
     String getName() 
     {
-        return F("star sky mode");
+        return F("energy cube mode");
     }
 
     unsigned int getRenderInterval()
@@ -99,43 +42,40 @@ public:
 
     void init()
     {
-        // FastLED.clearData();
-//        FastLED.clear();
         FastLEDControllers[UP_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
         FastLEDControllers[DOWN_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
-        FastLEDControllers[LEFT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
-        FastLEDControllers[RIGHT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
-        FastLEDControllers[FRONT_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
-        FastLEDControllers[BACK_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
+        FastLEDControllers[LEFT_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+        FastLEDControllers[RIGHT_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+        FastLEDControllers[FRONT_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
+        FastLEDControllers[BACK_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
 
-        pLeds[0] = leds[UP_SIDE];
-        pLeds[1] = leds[LEFT_SIDE];
-        pLeds[2] = leds[FRONT_SIDE];
+        pLeds = leds[UP_SIDE];
+    }
+
+    inline bool isCore(uint8_t x, uint8_t y)
+    {
+
     }
 
     void render() 
     {
-        bool addAStar = false;
-        if (random8(100) < 5)
+        // 对每一个非黑点进行渐暗处理
+        for (uint8_t i = 0; i < NUM_LEDS_PER_MATRIX; ++i)
         {
-            addAStar = true;
-        }
-
-        for (uint8_t i = 0; i < MAX_STAR_NUM; ++i)
-        {
-            if (! stars[i].isAlive())
-            {
-                if (addAStar)
-                {
-                    stars[i].init(pLeds[random8(MATRIX_BUFFER_NUM)], random8(8), random8(8), random8(100, 255), random8(1, 10));
-                    addAStar = false;
-                }
-
+            if (! pLedsBottom[i])
                 continue;
-            }
-
-            stars[i].twinkle();
+            
+            pLedsBottom[i].nscale8(SCALE_RATE);
         }
+
+        // // 根据几率设置一个点为白色进行渐暗
+        // if (random8(100) > (100 - newDotChance))
+        // {
+        //     return;
+        // }
+
+        // pLedsBottom[XY(random8(8), random8(8))] = CRGB::White;
+        // 根据是否核心点来确认产生几率以及颜色
     }
 };
 
