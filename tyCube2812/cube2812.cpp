@@ -9,6 +9,7 @@
 #include "rainMode.h"
 #include "hackerMatrixMode.h"
 #include "bubbleMode.h"
+#include "energyCubeMode.h"
 
 
 // FastLED 的 LED 数据
@@ -105,6 +106,8 @@ void setRenderMode(enum RENDER_MODE mode)
 
         case SNOW:               // 雪
         case ENERGY_CUBE:        // 能量魔方
+            newMode = new EnergyCubeMode();
+            break;
 
         default: 
             return;

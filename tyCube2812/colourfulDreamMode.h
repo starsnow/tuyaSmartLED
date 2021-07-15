@@ -19,6 +19,7 @@ class ColourfulDreamMode : public RenderMode
 private:
     unsigned int renderInterval;
     const uint8_t DISAPPEAR_RATE = 250;
+    const uint8_t newDotChance   = 90;
 
 public:
     ColourfulDreamMode()
@@ -48,7 +49,7 @@ public:
 
     void randPutAColorDot(CRGB *pLeds)
     {
-        if (random8(100) > 90)
+        if (random8(100) > newDotChance)
             return;
 
         randomDot(pLeds, CRGB(random8(), random8(), random8()));

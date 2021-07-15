@@ -85,7 +85,7 @@ public:
                 }
 
                 // y == 0 的时候，根据几率来生成一个头部点
-                if (random8(100) > (100 - newDotChance))
+                if (random8(100) > newDotChance)
                     continue;
 
                 for (i = 0; i < HEAD_NUM; ++i)
@@ -131,7 +131,7 @@ public:
             pLeds[i].nscale8(DISAPPEAR_RATE);
         }
 
-        if (random8(100) > (100 - newDotChance))
+        if (random8(100) > newDotChance)
             return;
 
         randomDot(pLeds, HEAD_COLOR);

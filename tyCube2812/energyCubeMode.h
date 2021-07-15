@@ -24,8 +24,8 @@ DEFINE_GRADIENT_PALETTE(energyCube_gp) {
 class EnergyCubeMode : public RenderMode
 {
 private:
-    static const uint8_t SCALE_RATE = 200;  // 变暗的比率
-    static const CRGBPalette16 energyCubeColorPallette = energyCube_gp;
+    static const uint8_t SCALE_RATE = 250;  // 变暗的比率
+    const CRGBPalette16 energyCubeColorPallette = energyCube_gp;
 
     unsigned int renderInterval;
     CRGB *pLeds;
@@ -72,8 +72,10 @@ public:
     // 减少计算量并且就是要指数效果，使用距离的平方即可
     inline uint8_t calcDistanceToCore(uint8_t x, uint8_t y)
     {
+        x <<= 1;
+        y <<= 1;
         uint8_t dx = (x > 7 ? x - 7 : 7 - x);
-        uint8_t dy = (x > 7 ? x - 7 : 7 - x);
+        uint8_t dy = (y > 7 ? y - 7 : 7 - y);
         return dx * dx + dy * dy;
     }
 
@@ -90,7 +92,11 @@ public:
     // 使用上述扩大两倍后的距离计算公式，最小距离平方是 1，最大距离平方是 98
     inline uint8_t calcNewDotChance(uint8_t distanceToCore)
     {
-        return 100 - distanceToCore;
+        // 核心的四个点一定亮
+        if (distanceToCore <= 2)
+            return 100;
+
+        return (100 - distanceToCore) >> 3;
     }
 
     // 根据离中心的距离获取新点的颜色
@@ -109,11 +115,11 @@ public:
             for (uint8_t y = 0; y < MATRIX_HEIGHT; ++y)
             {
                 // 每个点每次降低一些亮度
-                pLeds[i].nscale8(SCALE_RATE);
+                pLeds[XY(x, y)].nscale8(SCALE_RATE);
 
                 // 根据距离中心的距离来选择几率及颜色设置新的亮点
                 distanceToCore = calcDistanceToCore(x, y);
-                if (random8(100) > (100 - calcNewDotChance(distanceToCore)))
+                if (random8(100) > calcNewDotChance(distanceToCore))
                 {
                     continue;
                 }
@@ -123,7 +129,7 @@ public:
         }
 
         // 设置一些亮度波动
-        FastLED.setBrightness(nscale8(orignalBrigheness, beatsin8(10, 100, 255)));
+        FastLED.setBrightness(scale8(orignalBrigheness, beatsin8(10, 100, 255)));
     }
 };
 
