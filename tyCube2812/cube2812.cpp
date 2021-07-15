@@ -46,14 +46,15 @@ void initCube2812()
     // setRenderMode(COLOURFUL_DREAM);
     // setRenderMode(STAR_SKY);
     // setRenderMode(HACKER_MATRIX);
-    setRenderMode(BUBBLE);
+    // setRenderMode(BUBBLE);
+    setRenderMode(ENERGY_CUBE);
 }
 
 // 渲染刷新函数
 void updateCube2812()
 {
     static unsigned long last_time = 0;
-    static unsigned int renderIntervalMs = 0;
+    static unsigned int  renderIntervalMs = 0;
     if (millis() - last_time > renderIntervalMs)
     {
         last_time = millis();
