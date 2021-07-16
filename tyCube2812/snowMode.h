@@ -19,23 +19,34 @@ class SnowMode : public RenderMode
 {
 private:
     static const uint8_t SNOW_NUM = 30;
+    const uint8_t DISAPPEAR_RATE_TOP = 240;     
+    const uint8_t DISAPPEAR_RATE_BOTTOM = 253;     
+    const CRGB SNOW_COLOR = CRGB::White;
+
     unsigned int renderInterval;
+    unsigned int thawInterval;      // 积雪融化的间隔时间
     uint8_t newDotChance;
-    uint8_t brightnessDelta;
-    Point bubbles[BUBBLE_NUM];
     CRGB *pLedsTop, *pLedsBottom, *pLedsSide;
+    Point snows[SNOW_NUM];
+    CRGB emptyDot, snowDot;
 
 public:
-    BubbleMode()
+    SnowMode()
     {
         renderInterval = 100;
+        thawInterval = renderInterval * 8;
         newDotChance = 50;
-        brightnessDelta = 30;
+
+        // 由于要使用到奇偶校验位，需要特殊处理一下雪花点，保证奇偶校验位是 0
+        emptyDot = CRGB::Black;
+        snowDot  = SNOW_COLOR;
+        emptyDot.setParity(0);
+        snowDot.setParity(0);
     }
 
     String getName() 
     {
-        return F("bubble mode");
+        return F("snow mode");
     }
 
     unsigned int getRenderInterval()
@@ -57,103 +68,132 @@ public:
         pLedsSide   = leds[LEFT_SIDE];
     }
 
-    // 气泡效果上面的渲染
-    // 上面是渐亮的效果
-    void renderBubbleTop()
+    // 使用接口设置奇偶校验值为0，用来为侧面做为是否有积雪的标识，省去一个另做一个数组的空间和麻烦
+    void clearPaity(CRGB *pLeds, uint8_t ledNum)
     {
-        // 对每一个非黑点进行处理，如果达到最亮白色则设置为黑点，否则加上一些亮度
+        for (uint8_t i = 0; i < ledNum; ++i)
+        {
+            pLeds[i].setParity(0);
+        }
+    }
+
+    // 飘雪效果上面的渲染
+    // 上面是随机点渐暗的效果
+    void renderSnowTop()
+    {
         for (uint8_t i = 0; i < NUM_LEDS_PER_MATRIX; ++i)
         {
-            if (! pLedsTop[i])
-                continue;
-            
-            // if (pLedsTop[i].getAverageLight() == 0xFF)
-            if (pLedsTop[i] == (CRGB) CRGB::White)
-            {
-                pLedsTop[i] = CRGB::Black;
-                continue;
-            }
-
-            pLedsTop[i].addToRGB(brightnessDelta);
+            pLedsTop[i].nscale8(DISAPPEAR_RATE_TOP);
         }
 
-        // 根据几率设置一个点为非黑点进行渐亮
-        if (random8(100) > (100 - newDotChance))
+        if (random8(100) > (newDotChance))
         {
             return;
         }
 
-        pLedsTop[XY(random8(8), random8(8))] = 0x010101;
+        pLedsTop[XY(random8(8), random8(8))] = snowDot;
     }
 
-    // 气泡效果底面的渲染
-    // 底面是渐暗的效果
-    void renderBubbleBottom()
+    // 飘雪效果底面的渲染
+    // 底面也是渐暗的效果，不过让白点停留的时间久一些
+    void renderSnowBottom()
     {
-        // 对每一个非黑点进行渐暗处理
         for (uint8_t i = 0; i < NUM_LEDS_PER_MATRIX; ++i)
         {
-            if (! pLedsBottom[i])
-                continue;
-            
-            pLedsBottom[i].subtractFromRGB(brightnessDelta);
+            pLedsBottom[i].nscale8(DISAPPEAR_RATE_BOTTOM);
         }
 
-        // 根据几率设置一个点为白色进行渐暗
-        if (random8(100) > (100 - newDotChance))
+        if (random8(100) > (newDotChance))
         {
             return;
         }
 
-        pLedsBottom[XY(random8(8), random8(8))] = CRGB::White;
+        pLedsBottom[XY(random8(8), random8(8))] = snowDot;
     }
 
-    // 气泡效果侧面的渲染
-    // 就是小白点往上升就好了
-    void renderRainSide(CRGB pLeds[], uint8_t dir)
+    // 融化一层积雪
+    // 融化最下一层雪，和融化最上一层，视觉效果一样
+    void thaw(CRGB pLeds[], uint8_t dir)
     {
-        const CRGB BUBBLE_COLOR = CRGB::White;
+        static unsigned long lastTick = millis();
+        if (millis() - lastTick < thawInterval)
+            return;
+
+        lastTick = millis();
+
+        // 找每一列的第一个积雪点，清除
+        uint8_t x, y;
         CRGB *pLed;
+        for (x = 0; x < MATRIX_WIDTH; ++x)
+        {
+            for (y = 0; y < MATRIX_HEIGHT; ++y)
+            {
+                pLed = &pLeds[XY(x, y, dir)];
+                if (pLed->getParity() == 0)
+                    continue;
+
+                *pLed = emptyDot;
+                pLed->setParity(0);
+                break;
+            }
+        }
+    }
+    
+    // 飘雪效果侧面的渲染
+    // 小白点下落，并且会积累在最下面，每过一定时间清除最下一行
+    void renderSnowSide(CRGB pLeds[], uint8_t dir)
+    {
+        Point underPoint;
         uint8_t i;
 
-        // 向上移动气泡点
-        for (i = 0; i < BUBBLE_NUM; ++i)
+        // 先做一下融化积雪，再处理雪花下落
+        thaw(pLeds, dir);
+
+        // 从后往前进行，向下移动雪花
+        for (i = SNOW_NUM - 1; i >= 0; --i)
         {
-            if (bubbles[i].x == -1)
+            if (snows[i].x == -1)
                 continue;
 
-            pLeds[XY(bubbles[i].x, bubbles[i].y, dir)] = CRGB::Black;
-
-            bubbles[i].y--;
-            if (bubbles[i].y < 0)
+            // 如果下一个位置有雪花或是已经在最下一层，则停止下落，成为积雪
+            underPoint.x = snow[i].x;
+            underPoint.y = snow[i].y + 1;
+            if (underPoint.y >= MATRIX_HEIGHT || pLeds[XY(underPoint.x, underPoint.y)].getParity() == 1)
             {
-                bubbles[i].x = -1;
+                pLeds[XY(snows[i].x, snows[i].y, dir)].setParity(1);
+                snow[i].x = -1;
+
                 continue;
             }
-            pLeds[XY(bubbles[i].x, bubbles[i].y, dir)] = BUBBLE_COLOR;
+
+            // 下移雪花
+            pLeds[XY(snows[i].x, snows[i].y, dir)] = emptyDot;
+            snows[i].y++;
+            pLeds[XY(snows[i].x, snows[i].y, dir)] = snowDot;
         }
 
         // 根据几率来生成一个气泡
-        if (random8(100) > (100 - newDotChance))
+        if (random8(100) > newDotChance)
             return;
 
-        for (i = 0; i < BUBBLE_NUM; ++i)
+        for (i = 0; i < SNOW_NUM; ++i)
         {
             // 找到空余头部点位置的时候才生成新的头部点
-            if (bubbles[i].x != -1)
+            if (snows[i].x != -1)
                 continue;
 
-            bubbles[i].x = random8(MATRIX_WIDTH);
-            bubbles[i].y = MATRIX_HEIGHT;
+            snows[i].x = random8(MATRIX_WIDTH);
+            snows[i].y = 0;
+            pLeds[XY(snows[i].x, snows[i].y, dir)] = snowDot;
             break;
         }
     }
 
     void render() 
     {
-        renderBubbleTop();
-        renderBubbleBottom();
-        renderRainSide(pLedsSide, CW0);
+        renderSnowTop();
+        renderSnowBottom();
+        renderSnowSide(pLedsSide, CW0);
     }
 };
 

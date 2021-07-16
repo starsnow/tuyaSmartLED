@@ -111,7 +111,7 @@ public:
 
     // 气泡效果侧面的渲染
     // 就是小白点往上升就好了
-    void renderRainSide(CRGB pLeds[], uint8_t dir)
+    void renderBubbleSide(CRGB pLeds[], uint8_t dir)
     {
         const CRGB BUBBLE_COLOR = CRGB::White;
         CRGB *pLed;
@@ -154,7 +154,7 @@ public:
     {
         renderBubbleTop();
         renderBubbleBottom();
-        renderRainSide(pLedsSide, CW0);
+        renderBubbleSide(pLedsSide, CW0);
     }
 };
 
