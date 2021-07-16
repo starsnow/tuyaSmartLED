@@ -10,6 +10,7 @@
 #include "hackerMatrixMode.h"
 #include "bubbleMode.h"
 #include "energyCubeMode.h"
+#include "snowMode.h"
 
 
 // FastLED 的 LED 数据
@@ -48,7 +49,8 @@ void initCube2812()
     // setRenderMode(STAR_SKY);
     // setRenderMode(HACKER_MATRIX);
     // setRenderMode(BUBBLE);
-    setRenderMode(ENERGY_CUBE);
+    // setRenderMode(ENERGY_CUBE);
+    setRenderMode(SNOW);
 }
 
 // 渲染刷新函数
@@ -105,6 +107,9 @@ void setRenderMode(enum RENDER_MODE mode)
             break;
 
         case SNOW:               // 雪
+            newMode = new SnowMode();
+            break;
+
         case ENERGY_CUBE:        // 能量魔方
             newMode = new EnergyCubeMode();
             break;

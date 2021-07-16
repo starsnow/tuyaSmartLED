@@ -16,7 +16,7 @@
 #define MATRIX_HEIGHT       8   // 点阵屏的高（LED 数）
 
 // FastLED 相关参数
-#define INIT_BRIGHTNESS     5
+#define INIT_BRIGHTNESS     50
 #define CHIPSET             WS2812B
 #define COLOR_ORDER         GRB
 

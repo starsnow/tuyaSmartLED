@@ -16,33 +16,35 @@ extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
 
 DEFINE_GRADIENT_PALETTE(energyCube_gp) {
-    0,   0x00, 0xFF, 0xFF,      // 亮蓝
-    50,  0x00, 0xC1, 0xD1,      // 暗蓝
+    0,   0xFF, 0xFF, 0xFF,
+    2,   0x00, 0xFF, 0xFF,      // 亮蓝
+    5,  0x00, 0xC1, 0xD1,      // 暗蓝
+    150, 0x00, 0x00, 0x00,      // 黑
     255, 0x00, 0x00, 0x00       // 黑
 };
 
 class EnergyCubeMode : public RenderMode
 {
 private:
-    static const uint8_t SCALE_RATE = 250;  // 变暗的比率
+    static const uint8_t SCALE_RATE = 245;  // 变暗的比率
     const CRGBPalette16 energyCubeColorPallette = energyCube_gp;
 
     unsigned int renderInterval;
     CRGB *pLeds;
     
-    uint8_t orignalBrigheness;            // 旧的亮度信息保存下来，以便在退出此模式的时候恢复
+    uint8_t originalBrightness;            // 旧的亮度信息保存下来，以便在退出此模式的时候恢复
 
 public:
     EnergyCubeMode()
     {
         renderInterval = 5;
-        orignalBrigheness = FastLED.getBrightness();
+        originalBrightness = FastLED.getBrightness();
     }
 
     ~EnergyCubeMode()
     {
         // 析构的时候恢复原来的亮度信息
-        FastLED.setBrightness(orignalBrigheness);
+        FastLED.setBrightness(originalBrightness);
     }
 
     String getName() 
@@ -96,7 +98,7 @@ public:
         if (distanceToCore <= 2)
             return 100;
 
-        return (100 - distanceToCore) >> 3;
+        return (100 - distanceToCore) >> 4;
     }
 
     // 根据离中心的距离获取新点的颜色
@@ -115,7 +117,7 @@ public:
             for (uint8_t y = 0; y < MATRIX_HEIGHT; ++y)
             {
                 // 每个点每次降低一些亮度
-                pLeds[XY(x, y)].nscale8(SCALE_RATE);
+                pLeds[XY(x, y)].nscale8_video(SCALE_RATE);
 
                 // 根据距离中心的距离来选择几率及颜色设置新的亮点
                 distanceToCore = calcDistanceToCore(x, y);
@@ -129,7 +131,7 @@ public:
         }
 
         // 设置一些亮度波动
-        FastLED.setBrightness(scale8(orignalBrigheness, beatsin8(10, 100, 255)));
+        FastLED.setBrightness(scale8(originalBrightness, beatsin8(20, 50, 255)));
     }
 };
 

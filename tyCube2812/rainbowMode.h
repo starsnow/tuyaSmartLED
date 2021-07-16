@@ -23,7 +23,7 @@ private:
 public:
     RainbowMode()
     {
-        renderInterval = 100;    
+        renderInterval = 10;    
     }
 
     String getName() 
