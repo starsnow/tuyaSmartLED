@@ -13,7 +13,7 @@
 extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 
 // 各个 FastLED 控制器
-extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
+extern CLEDController* FastLEDControllers[MATRIX_NUM];
 
 class RainMode : public RenderMode
 {
@@ -129,6 +129,12 @@ public:
     {
         renderRainTop();
         renderRainSide(pLedsSide, CW0);
+    }
+
+    
+    void input(uint8_t)
+    {
+        
     }
 };
 

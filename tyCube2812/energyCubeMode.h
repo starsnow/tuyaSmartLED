@@ -13,7 +13,7 @@
 extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 
 // 各个 FastLED 控制器
-extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
+extern CLEDController* FastLEDControllers[MATRIX_NUM];
 
 DEFINE_GRADIENT_PALETTE(energyCube_gp) {
     0,   0xFF, 0xFF, 0xFF,
@@ -132,6 +132,12 @@ public:
 
         // 设置一些亮度波动
         FastLED.setBrightness(scale8(originalBrightness, beatsin8(20, 50, 255)));
+    }
+
+
+    void input(uint8_t)
+    {
+        
     }
 };
 

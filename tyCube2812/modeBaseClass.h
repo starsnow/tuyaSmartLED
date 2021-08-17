@@ -12,6 +12,7 @@ public:
     virtual void         render() {};            // 渲染函数
     virtual unsigned int getRenderInterval() {}; // 渲染时间间隔（单位毫秒）
     virtual void         init() {};              // 初始化
+    virtual void         input(uint8_t dir) {};  // 交互的输入
 };
 
 #endif

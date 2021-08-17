@@ -13,7 +13,7 @@
 extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 
 // 各个 FastLED 控制器
-extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
+extern CLEDController* FastLEDControllers[MATRIX_NUM];
 
 class HackerMatrixMode : public RenderMode
 {
@@ -141,6 +141,12 @@ public:
     {
         renderHackerMatrixTop(leds[UP_SIDE]);
         renderHackerMatrixSide(leds[LEFT_SIDE], CW0);
+    }
+
+
+    void input(uint8_t)
+    {
+        
     }
 };
 

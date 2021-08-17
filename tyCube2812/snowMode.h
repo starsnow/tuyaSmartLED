@@ -13,7 +13,7 @@
 extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 
 // 各个 FastLED 控制器
-extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
+extern CLEDController* FastLEDControllers[MATRIX_NUM];
 
 class SnowMode : public RenderMode
 {
@@ -58,14 +58,14 @@ public:
     void init()
     {
         FastLEDControllers[UP_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
-        FastLEDControllers[DOWN_SIDE]->setLeds(leds[DOWN_SIDE], NUM_LEDS_PER_MATRIX);
+        FastLEDControllers[DOWN_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
         FastLEDControllers[LEFT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
         FastLEDControllers[RIGHT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
         FastLEDControllers[FRONT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
         FastLEDControllers[BACK_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
 
         pLedsTop    = leds[UP_SIDE];
-        pLedsBottom = leds[DOWN_SIDE];
+        pLedsBottom = leds[UP_SIDE];
         pLedsSide   = leds[LEFT_SIDE];
     }
 
@@ -224,8 +224,13 @@ public:
     void render() 
     {
         renderSnowTop();
-        renderSnowBottom();
+        // renderSnowBottom();
         renderSnowSide(pLedsSide, CW0);
+    }
+    
+    void input(uint8_t)
+    {
+        
     }
 };
 

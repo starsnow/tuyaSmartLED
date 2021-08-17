@@ -13,7 +13,7 @@
 extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 
 // 各个 FastLED 控制器
-extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
+extern CLEDController* FastLEDControllers[MATRIX_NUM];
 
 const uint8_t MAX_STAR_NUM = 10;
 
@@ -105,12 +105,14 @@ public:
         FastLEDControllers[DOWN_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
         FastLEDControllers[LEFT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
         FastLEDControllers[RIGHT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
-        FastLEDControllers[FRONT_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
-        FastLEDControllers[BACK_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
+        // FastLEDControllers[FRONT_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
+        // FastLEDControllers[BACK_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
+        FastLEDControllers[FRONT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+        FastLEDControllers[BACK_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
 
         pLeds[0] = leds[UP_SIDE];
         pLeds[1] = leds[LEFT_SIDE];
-        pLeds[2] = leds[FRONT_SIDE];
+        // pLeds[2] = leds[FRONT_SIDE];
     }
 
     void render() 
@@ -136,6 +138,11 @@ public:
 
             stars[i].twinkle();
         }
+    }
+
+    void input(uint8_t)
+    {
+        
     }
 };
 

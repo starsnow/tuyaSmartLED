@@ -13,7 +13,7 @@
 extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 
 // 各个 FastLED 控制器
-extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
+extern CLEDController* FastLEDControllers[MATRIX_NUM];
 
 class RainbowMode : public RenderMode
 {
@@ -48,6 +48,12 @@ public:
     {
         static uint8_t hue = -1;
         fill_rainbow(leds[UP_SIDE], NUM_LEDS_PER_MATRIX, hue++, 10);
+    }
+
+
+    void input(uint8_t)
+    {
+        
     }
 };
 

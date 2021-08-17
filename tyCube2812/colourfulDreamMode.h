@@ -12,7 +12,7 @@
 extern CRGB leds[MATRIX_BUFFER_NUM][NUM_LEDS_PER_MATRIX];
 
 // 各个 FastLED 控制器
-extern CLEDController* FastLEDControllers[MATRIX_BUFFER_NUM];
+extern CLEDController* FastLEDControllers[MATRIX_NUM];
 
 class ColourfulDreamMode : public RenderMode
 {
@@ -43,8 +43,8 @@ public:
         FastLEDControllers[DOWN_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
         FastLEDControllers[LEFT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
         FastLEDControllers[RIGHT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
-        FastLEDControllers[FRONT_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
-        FastLEDControllers[BACK_SIDE]->setLeds(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX);
+        FastLEDControllers[FRONT_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
+        FastLEDControllers[BACK_SIDE]->setLeds(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX);
     }
 
     void randPutAColorDot(CRGB *pLeds)
@@ -59,11 +59,16 @@ public:
     {
         nscale8(leds[UP_SIDE], NUM_LEDS_PER_MATRIX, DISAPPEAR_RATE);
         nscale8(leds[LEFT_SIDE], NUM_LEDS_PER_MATRIX, DISAPPEAR_RATE);
-        nscale8(leds[FRONT_SIDE], NUM_LEDS_PER_MATRIX, DISAPPEAR_RATE);
+        // nscale8(leds[DOWN_SIDE], NUM_LEDS_PER_MATRIX, DISAPPEAR_RATE);
 
         randPutAColorDot(leds[UP_SIDE]);
         randPutAColorDot(leds[LEFT_SIDE]);
-        randPutAColorDot(leds[FRONT_SIDE]);
+        // randPutAColorDot(leds[DOWN_SIDE]);
+    }
+
+    void input(uint8_t)
+    {
+        
     }
 };
 

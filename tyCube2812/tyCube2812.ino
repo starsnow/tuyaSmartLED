@@ -1,10 +1,19 @@
 #include <TuyaWifi.h>
-#include <SoftwareSerial.h>
 #include <FastLED.h>
 #include "cube2812.h"
 
+// #define SOFTSERIAL_DEBUG 1
+
+#ifdef SOFTSERIAL_DEBUG
+#include <SoftwareSerial.h>
+#endif
+
 boolean oldState = HIGH;
-int mode = 0; // Currently-active animation mode, 0-9
+
+// int mode = 0; // Currently-active animation mode, 0-9
+#ifdef SOFTSERIAL_DEBUG
+// SoftwareSerial debugSerial(12, 13);
+#endif
 
 TuyaWifi my_device;
 
@@ -184,7 +193,13 @@ unsigned char mcu_ver[] = {"1.0.0"};
 void setup()
 {
     pinMode(WIFI_RECONNECT_BUTTON_PIN, INPUT_PULLUP);
-
+#ifdef SOFTSERIAL_DEBUG
+    debugSerial.begin(9600);
+    debugSerial.print(F("WIFI_UART_RECV_BUF_LMT: "));
+    debugSerial.println(WIFI_UART_RECV_BUF_LMT);
+    debugSerial.print(F("WIFI_DATA_PROCESS_LMT: "));
+    debugSerial.println(WIFI_DATA_PROCESS_LMT);
+#endif
     Serial.begin(9600);
     //Initialize led port, turn off led.
     pinMode(LED_BUILTIN, OUTPUT);
@@ -247,6 +262,10 @@ void loop()
  */
 unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsigned short length)
 {
+#ifdef SOFTSERIAL_DEBUG    
+    debugSerial.print(F("dpid: "));
+    debugSerial.println(dpid);
+#endif
     switch (dpid)
     {
     case DPID_SWITCH_LED:
@@ -254,18 +273,22 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
         if (dp_bool_value)
         {
             //Turn on
-//            renderFunction = lastRenderFunction;
-            FastLED.clear();
+            turnOnCube2812();
         }
         else
         {
             //Turn off
-//            lastRenderFunction = renderFunction;
-//            renderFunction = 0;
-            FastLED.showColor(CRGB::Black);
+            turnOffCube2812();
         }
 
         //Status changes should be reported.
+        my_device.mcu_dp_update(dpid, value, length);
+        break;
+
+    case DPID_BRIGHT_VALUE:
+        dp_value_value = my_device.mcu_get_dp_download_data(dpid, value, length); /* Get the value of the down DP command */
+
+        FastLED.setBrightness(dp_value_value);
         my_device.mcu_dp_update(dpid, value, length);
         break;
 
@@ -298,18 +321,14 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
         break;
 
     case DPID_SCENE_DATA:
-//    blinkLED(1);
-       my_device.mcu_dp_update(DPID_DREAMLIGHT_SCENE_MODE, value, length);
-
+        my_device.mcu_dp_update(DPID_SCENE_DATA, value, length);
         scene_mode = value[1];
 
         switch (scene_mode)
         {
         case 0:
-//            renderFunction = renderRainbow;
             break;
         case 1:
-//            renderFunction = renderHackMatrix;
             break;
         case 2:
             break;
@@ -329,22 +348,22 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
         break;
 
     case DPID_DREAMLIGHT_SCENE_MODE: //炫彩情景
-//        blinkLED(2);
-        //delay(1000);
         my_device.mcu_dp_update(DPID_DREAMLIGHT_SCENE_MODE, value, length);
-
         scene_mode = value[1];
-//blinkLED(scene_mode);
+#ifdef SOFTSERIAL_DEBUG        
+        debugSerial.print(F("mode value: "));
+        debugSerial.println(scene_mode);
+#endif
         switch (scene_mode)
         {
         case 0:
-//            renderFunction = renderRainbow;
+            setRenderMode(COLOURFUL_DREAM);
             break;
         case 1:
-//            renderFunction = renderHackMatrix;
+            setRenderMode(RAINBOW);
             break;
         case 2:
-//            renderFunction = renderRainbow;
+            setRenderMode(SNOW);
             break;
         case 3:
             break;
@@ -358,6 +377,61 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
             break;
         case 8:
             break;
+
+        // case 200: // 自定义的第一个
+        //     setRenderMode(RAINBOW);
+        //     break;
+        // case 201: // 自定义的第一个
+        //     setRenderMode(COLOURFUL_DREAM);
+        //     break;
+        // case 202: // 自定义的第一个
+        //     setRenderMode(STAR_SKY);
+        //     break;
+        // case 203: // 自定义的第一个
+        //     setRenderMode(HACKER_MATRIX);
+        //     break;
+        // case 204: // 自定义的第一个
+        //     setRenderMode(RAIN);
+        //     break;
+        // case 205: // 自定义的第一个
+        //     setRenderMode(BUBBLE);
+        //     break;
+        // case 206: // 自定义的第一个
+        //     setRenderMode(SNOW);
+        //     break;
+        // case 207: // 自定义的第一个
+        //     setRenderMode(ENERGY_CUBE);
+        //     break;
+        // case 208: // 自定义的第一个
+        //     setRenderMode(SNAKE_GAME);
+        //     break;
+
+        // APP 只能定义 8 个自定义场景，所以贪吃蛇另外做一个
+        case 200: // 自定义的第一个
+            setRenderMode(ENERGY_CUBE);
+            break;
+        case 201: // 自定义的第一个
+            setRenderMode(SNAKE_GAME);
+            break;
+        case 202: // 上
+            inputDir(UP);
+            break;
+        case 203: // 右
+            inputDir(RIGHT);
+            break;
+        case 204: // 左
+            inputDir(LEFT);
+            break;
+        case 205: // 下
+            inputDir(DOWN);
+            break;
+        case 206: // 自定义的第一个
+            setRenderMode(COLOURFUL_DREAM);
+            break;
+        case 207: // 自定义的第一个
+            setRenderMode(STAR_SKY);
+            break;
+
         }
 
         break;
