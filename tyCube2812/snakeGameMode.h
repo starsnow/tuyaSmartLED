@@ -65,7 +65,7 @@ public:
 
     void init()
     {
-        random16_set_seed(millis()*analogRead(A0));
+        random16_set_seed(millis() + analogRead(A0));
         
         FastLEDControllers[UP_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
         // FastLEDControllers[DOWN_SIDE]->setLeds(leds[UP_SIDE], NUM_LEDS_PER_MATRIX);
@@ -146,17 +146,21 @@ public:
     {
         uint8_t i;
 
-        FastLED.clear();
         // for (i = snakeHeadIndex; i != (snakeHeadIndex + MAX_SNAKE_LENGTH - 1) % MAX_SNAKE_LENGTH; i = (i + 1 + MAX_SNAKE_LENGTH) % MAX_SNAKE_LENGTH)
         for (i = 0; i < snakeLength; ++i)
         {
             if (snake[i].x == -1)
             {
-                break;
+                continue;
             }
 
             pLeds[XY(snake[i].x, snake[i].y, dir)] = (i == snakeHeadIndex ? HEAD_COLOR : BODY_COLOR);
         }
+    }
+
+    void renderFoods(CRGB *pLeds, uint8_t dir)
+    {
+        uint8_t i;
 
         for (i = 0; i < MAX_FOOD_NUM; ++i)
         {
@@ -167,8 +171,18 @@ public:
         }
     }
 
+    void renderSnakeGameMap(CRGB *pLeds, uint8_t dir)
+    {
+        FastLED.clear();
+        renderSnake(pLeds, dir);
+        renderFoods(pLeds, dir);
+    }
+
     void moveSnake()
     {
+        if (moveDir == NONE)
+            return;
+
         uint8_t newHeadIndex = (snakeHeadIndex + snakeLength - 1) % snakeLength;
         snake[newHeadIndex] = snake[snakeHeadIndex];
         snakeHeadIndex = newHeadIndex;
@@ -229,22 +243,40 @@ public:
         return dead;
     }
 
-    void intput(uint8_t d)
+    void input(uint8_t d)
     {
+        if (d == UP    && moveDir == DOWN ||
+            d == DOWN  && moveDir == UP ||
+            d == LEFT  && moveDir == RIGHT ||
+            d == RIGHT && moveDir == LEFT)
+        {
+            return;
+        }
         moveDir = d;
-        Serial.println(d);
     }
 
     void render() 
     {
-        // if (isDead())
-        // {
-        //     return;
-        // }
+        static bool blinkDeadSnake = false;
+
+        if (isDead())
+        {
+            blinkDeadSnake = !blinkDeadSnake;
+            FastLED.clear();
+            renderFoods(pLedsFront, CW0);
+            if (blinkDeadSnake)
+            {
+                renderSnake(pLedsFront, CW0);
+            }
+
+            return;
+        }
+
         moveSnake();
         if (checkHit())
         {
             die();
+            return;
         }
 
         if (eatFood())
@@ -253,7 +285,7 @@ public:
             genNewFoods(pLedsFront, CW0);
         }
 
-        renderSnake(pLedsFront, CW0);
+        renderSnakeGameMap(pLedsFront, CW0);
     }
 };
 

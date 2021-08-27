@@ -22,6 +22,7 @@
 
 // 每个面的 2812 数据引脚
 #ifdef ARDUINO_AVR_PRO
+// prop mini 的引脚
 enum DATA_PIN
 {
     UP_PIN      = 2,

@@ -2,18 +2,9 @@
 #include <FastLED.h>
 #include "cube2812.h"
 
-// #define SOFTSERIAL_DEBUG 1
-
-#ifdef SOFTSERIAL_DEBUG
-#include <SoftwareSerial.h>
-#endif
-
 boolean oldState = HIGH;
 
 // int mode = 0; // Currently-active animation mode, 0-9
-#ifdef SOFTSERIAL_DEBUG
-// SoftwareSerial debugSerial(12, 13);
-#endif
 
 TuyaWifi my_device;
 
@@ -193,13 +184,7 @@ unsigned char mcu_ver[] = {"1.0.0"};
 void setup()
 {
     pinMode(WIFI_RECONNECT_BUTTON_PIN, INPUT_PULLUP);
-#ifdef SOFTSERIAL_DEBUG
-    debugSerial.begin(9600);
-    debugSerial.print(F("WIFI_UART_RECV_BUF_LMT: "));
-    debugSerial.println(WIFI_UART_RECV_BUF_LMT);
-    debugSerial.print(F("WIFI_DATA_PROCESS_LMT: "));
-    debugSerial.println(WIFI_DATA_PROCESS_LMT);
-#endif
+
     Serial.begin(9600);
     //Initialize led port, turn off led.
     pinMode(LED_BUILTIN, OUTPUT);
@@ -262,10 +247,6 @@ void loop()
  */
 unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsigned short length)
 {
-#ifdef SOFTSERIAL_DEBUG    
-    debugSerial.print(F("dpid: "));
-    debugSerial.println(dpid);
-#endif
     switch (dpid)
     {
     case DPID_SWITCH_LED:
@@ -350,10 +331,7 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
     case DPID_DREAMLIGHT_SCENE_MODE: //炫彩情景
         my_device.mcu_dp_update(DPID_DREAMLIGHT_SCENE_MODE, value, length);
         scene_mode = value[1];
-#ifdef SOFTSERIAL_DEBUG        
-        debugSerial.print(F("mode value: "));
-        debugSerial.println(scene_mode);
-#endif
+
         switch (scene_mode)
         {
         case 0:
@@ -437,8 +415,23 @@ unsigned char dp_process(unsigned char dpid, const unsigned char value[], unsign
         break;
 
     case DPID_LIGHTPIXEL_NUMBER_SET: //长度设置
+        dp_value_value = my_device.mcu_get_dp_download_data(dpid, value, length); /* Get the value of the down DP command */
+        switch (dp_value_value)
+        {
+            case 1: inputDir(UP);    break;
+            case 2: inputDir(DOWN);  break;
+            case 3: inputDir(LEFT);  break;
+            case 4: inputDir(RIGHT); break;
+            case 5: // reset
+                turnOffCube2812();
+                delay(10);
+                turnOnCube2812();
+                break;
+        }
+
         my_device.mcu_dp_update(dpid, value, length);
         break;
+
     default:
         break;
     }

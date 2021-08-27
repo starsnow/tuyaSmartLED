@@ -69,9 +69,8 @@ void updateCube2812()
         if (renderMode == 0)
             return;
 
-Serial.println("xxx");
-        renderMode->input(random8(4) +1);
-        // inputDir(random8(4) +1)
+        // renderMode->input(random8(4) +1);
+        // inputDir(random8(4) + 1);
         renderIntervalMs = renderMode->getRenderInterval();
         renderMode->render();
         FastLED.show();
@@ -134,6 +133,7 @@ void setRenderMode(enum RENDER_MODE mode)
             if (renderMode != 0)
             {
                 delete renderMode;
+                renderMode = 0;
             }
             FastLED.clear();
             FastLED.showColor(CRGB::Black);
